@@ -7,6 +7,9 @@ const {
   sendOtp,
   getAllUsers,
   getSingleUser,
+
+  forgotPassword,
+  resetPassword,
   // sendOTP,
 } = require("../controller/userController");
 
@@ -19,5 +22,7 @@ router.get("/auth/verify/:token", verifyUser);
 router.get("/", getAllUsers);
 
 router.get("/:id", getSingleUser);
+router.post("/forgotPassword", forgotPassword);
+router.post("/resetPassword/:token", resetPassword);
 
 module.exports = router;

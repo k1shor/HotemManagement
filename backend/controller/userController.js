@@ -3,19 +3,22 @@ const asyncHandler = require("../middleware/asyncHandler");
 const ErrorResponse = require("../utils/ErrorResponse");
 const User = require("../model/userSchema");
 const jwt = require("jsonwebtoken");
+const Token = require("../model/tokenSchema");
 
 const crypto = require("crypto");
 const mailSender = require("../utils/mailSender");
 const OTP = require("../model/otpSchema");
 const otpSchema = require("../model/otpSchema");
+const { generateToken } = require("../utils/generateToken");
 
-const generateOTP = async (email) => {
-  let token = await OTP.create({
-    otp: crypto.randomBytes(16).toString("hex"),
-    email: email,
-  });
-  return token.otp;
-};
+// const generateToken = async (email) => {
+//   let token = await Token.create({
+//     token: crypto.randomBytes(16).toString("hex"),
+//     email: email,
+//   });
+
+//   return token;
+// };
 
 // console.log(generateOTP());
 
@@ -98,16 +101,8 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
   });
 });
 
-/********************************************
- *     @description Verfify User
- *   @route       POST /api/v1/auth/verify
- *  @access      Private
- * ********************************************/
 exports.sendOtp = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
-
-  const otp = await generateOTP(email);
-
   if (!email) {
     throw new ErrorResponse("Enter email", 400);
   }
@@ -120,18 +115,24 @@ exports.sendOtp = asyncHandler(async (req, res, next) => {
     throw new ErrorResponse("User not found", 400);
   }
 
-  console.log(otp);
-  const URL = `http://localhost:4000/api/v1/user/auth/verify/${otp}`;
+  const generatedToken = generateToken(user._id);
 
+  const token = await Token.create({ token: generatedToken });
+  token.user = user._id;
+
+  await token.save();
   mailSender({
     email,
-    title: "OTP Verification: </br>",
-    body: `Your OTP is ${otp}. Please do not share it with anyone. <a href=${URL}>Click here to verify</a>`,
+    title: "Email Verification",
+    body: `Please activate your email by clicking the  <a href="http://localhost:4000/api/v1/user/auth/verify/${generatedToken}">URL</a>`,
   });
 
-  return res.status(200).json({
+  // const URL = `http://localhost:4000/api/v1/user/auth/verify/${generatedToken}`;
+  // await token.save();
+  res.json({
     success: true,
     msg: "OTP sent successfully to email",
+    token,
   });
 });
 
@@ -142,22 +143,22 @@ exports.sendOtp = asyncHandler(async (req, res, next) => {
  * ********************************************/
 
 exports.verifyUser = asyncHandler(async (req, res, next) => {
-  const { token } = req.params;
+  // const { token } =
+  const token = await Token.findOne({ token: req.params.token });
 
-  const dbOtp = await OTP.findOne({ otp: token });
+  if (!token) {
+    throw new ErrorResponse("Invalid token", 400);
+  }
 
-  const user = await User.findOne({
-    email: dbOtp.email,
-  });
+  const user = await User.findById(token.user);
 
   user.isVerified = true;
-
   await user.save();
 
   res.status(200).json({
     success: true,
     msg: "OTP verified successfully",
-    dbOtp,
+    user,
   });
 });
 
@@ -199,7 +200,7 @@ exports.getSingleUser = asyncHandler(async (req, res, next) => {
  * @access      Private
  ********************************************/
 
-exports.resetPasswordToken = asyncHandler(async (req, res, next) => {
+exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
 
   const user = await User.findOne({ email });
@@ -207,5 +208,65 @@ exports.resetPasswordToken = asyncHandler(async (req, res, next) => {
     throw new ErrorResponse("User not found", 400);
   }
 
-  const token = await generateOTP(email);
+  const token = generateToken(user._id);
+
+  await Token.create({ token, user: user._id });
+
+  mailSender({
+    email,
+    title: "Reset Password",
+    body: `Please click the link to reset your password <a href="http://localhost:4000/api/v1/user/resetPassword/${token}">Reset Password</a>`,
+  });
+
+  res.status(200).json({
+    success: true,
+    msg: "Reset password link sent to email",
+    token,
+  });
 });
+
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+  const userToken = await Token.findOne({ token: req.params.token });
+
+  if (!userToken)
+    return res.status(200).json({
+      success: false,
+      msg: "Invalid token",
+    });
+
+  // console.log(user, "user");
+
+  const user = await User.findById(userToken.user);
+
+  const { password, confirmPassword } = req.body;
+  if (!password || !confirmPassword) {
+    return res.status(400).json({
+      success: false,
+      msg: "All fields are required",
+    });
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({
+      success: false,
+      msg: "Password do not match",
+    });
+  }
+
+  user.password = password;
+
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+
+    msg: "Password reset successfully",
+  });
+});
+
+// sjcon6l6b4J4MtqdWqSlLOCEV8sLeZoytcBTwR9fUQ73iwUcZNUiC;
+// $2b$10$sjcon6l6b4J4MtqdWqSlLOCEV8sLeZoytcBTwR9fUQ73iwUcZNUiC;
+
+// $2b$10$z3NdkN1gj14lXdQiAjwf3.TAQAixK/I1wNKxFw81lT2x9P/lBouSO
+// $2b$10$z3NdkN1gj14lXdQiAjwf3.TAQAixK/I1wNKxFw81lT2x9P/lBouSO
+// $2b$10$z3NdkN1gj14lXdQiAjwf3.TAQAixK/I1wNKxFw81lT2x9P/lBouSO
