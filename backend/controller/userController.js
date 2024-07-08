@@ -4,11 +4,11 @@ const ErrorResponse = require("../utils/ErrorResponse");
 const User = require("../model/userSchema");
 const jwt = require("jsonwebtoken");
 const Token = require("../model/tokenSchema");
+const { expressjwt } = require("express-jwt");
 
 const crypto = require("crypto");
 const mailSender = require("../utils/mailSender");
-const OTP = require("../model/otpSchema");
-const otpSchema = require("../model/otpSchema");
+
 const { generateToken } = require("../utils/generateToken");
 
 // const generateToken = async (email) => {
@@ -35,6 +35,7 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
 
   if (!name || !email || !password) {
     throw new ErrorResponse("All fields are required", 400);
+    // return res.status(400).json({ error: "All fields are required" });
   }
 
   const existingUser = await User.findOne({ email });
@@ -71,7 +72,7 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
     throw new ErrorResponse("All fields are required", 400);
   }
 
-  const user = await User.findOne({ email }).select("-password");
+  const user = await User.findOne({ email });
   if (!user) {
     throw new ErrorResponse("Invalid credentials", 400);
   }
@@ -80,7 +81,13 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
   }
 
   const token = jwt.sign(
-    { id: user._id, email: user.email },
+    {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      isVerified: user.isVerified,
+    },
     process.env.JWT_SECRET,
     {
       expiresIn: "3d",
@@ -170,6 +177,9 @@ exports.verifyUser = asyncHandler(async (req, res, next) => {
 
 exports.getAllUsers = asyncHandler(async (req, res, next) => {
   const users = await User.find();
+  if (!users) {
+    return res.status(400).json({ error: "SOmething went wrong" });
+  }
   res.status(200).json({
     success: true,
     numberOfUsers: users.length,
@@ -185,6 +195,7 @@ exports.getAllUsers = asyncHandler(async (req, res, next) => {
 
 exports.getSingleUser = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.params.id);
+
   if (!user) {
     throw new ErrorResponse("User not found", 400);
   }
@@ -264,9 +275,44 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   });
 });
 
-// sjcon6l6b4J4MtqdWqSlLOCEV8sLeZoytcBTwR9fUQ73iwUcZNUiC;
-// $2b$10$sjcon6l6b4J4MtqdWqSlLOCEV8sLeZoytcBTwR9fUQ73iwUcZNUiC;
+exports.isLoggedIn = expressjwt({
+  secret: process.env.JWT_SECRET,
+  algorithms: ["HS256"],
+});
 
-// $2b$10$z3NdkN1gj14lXdQiAjwf3.TAQAixK/I1wNKxFw81lT2x9P/lBouSO
-// $2b$10$z3NdkN1gj14lXdQiAjwf3.TAQAixK/I1wNKxFw81lT2x9P/lBouSO
-// $2b$10$z3NdkN1gj14lXdQiAjwf3.TAQAixK/I1wNKxFw81lT2x9P/lBouSO
+exports.requireLogin = async (req, res, next) => {
+  expressjwt({
+    algorithms: ["HS256"],
+    secret: process.env.JWT_SECRET,
+  })(req, res, (error) => {
+    if (error) {
+      return res
+        .status(401)
+        .json({ error: "You must login to access this resource" });
+    } else {
+      next();
+    }
+  });
+};
+
+exports.isAdmin = expressjwt({
+  secret: "thisismyjwtsecret",
+  algorithms: ["HS256"],
+});
+
+exports.requireAdmin = async (req, res, next) => {
+  expressjwt({
+    algorithms: ["HS256"],
+    secret: process.env.JWT_SECRET,
+  })(req, res, (error) => {
+    if (error) {
+      return res
+        .status(401)
+        .json({ error: "You must login to access this resource" });
+    } else if (req.auth.role != 1) {
+      return res.status(401).json({ error: "You must be admin" });
+    } else {
+      next();
+    }
+  });
+};

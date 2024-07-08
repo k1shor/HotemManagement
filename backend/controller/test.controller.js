@@ -7,3 +7,5 @@ exports.getTest = asyncHandler(async (req, res, next) => {
     data: "Thi is test route",
   });
 });
+
+// 1. create cate
