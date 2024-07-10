@@ -17,29 +17,10 @@ const Room = require("../model/roomSchema");
 exports.addHotels = asyncHandler(async (req, res, next) => {
   const { hotelName, description, address, phone, category, rooms } = req.body;
 
-  // if (!hotelName || !description || !address || !phone || !category) {
-  //   return next(new ErrorResponse("Please fill all the fields", 400));
-  // }
-  console.log(req.files);
+  console.log(req?.file, "filee path");
+  console.log(req?.files, "filee path");
+  console.log(req.body);
 
-  console.log(req.body, "afasfasfdsa");
-
-  console.log(hotelName, description, address, phone, category, rooms);
-  // console.log("88242342342342342");
-  // const { name, price } = req.body.roomCategory;
-
-  // const { roomNumber, availability } = req.body.rooms;
-
-  // const createdRoomCategory = await RoomCategory.create({
-  //   name,
-  //   price,
-  // });
-
-  // const createdRoom = await Room.create({
-  //   roomNumber,
-  //   availability,
-  //   roomCategory: createdRoomCategory._id,
-  // });
   const hotels = await Hotel.create({
     hotelName,
     description,
@@ -66,7 +47,22 @@ exports.addHotels = asyncHandler(async (req, res, next) => {
  * ********************************************/
 
 exports.getHotels = asyncHandler(async (req, res, next) => {
-  const hotels = await Hotel.find().populate("rooms roomCategory");
+
+  const {category, address} = req.query;
+
+
+  let query = {};
+
+  if(category){
+    query.category = category
+  }
+
+  if(address){
+    query.address = new RegExp(address, "i") // i for case insensitive
+  }
+
+  const hotels = await Hotel.find(query).populate("rooms roomCategory");
+
 
   res.status(200).json({
     success: true,

@@ -1,12 +1,13 @@
-export const addHotelAPI = (product) => {
+export const addHotelAPI = (hotel) => {
   // return fetch(`${process.env.BACKEND_URL}/product/auth/register`, {
   return fetch(`http://localhost:4000/api/v1/hotels`, {
     method: "POST",
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
+      // Accept: "application/json",
+      // "Content-Type": "multipart/form-data",
     },
-    body: product,
+ 
+    body: hotel,
   })
     .then((response) => {
       return response.json();

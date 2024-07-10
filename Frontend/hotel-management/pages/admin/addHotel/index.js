@@ -1,38 +1,92 @@
 import { addHotelAPI } from "@/pages/api/hotelAPI";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import toast from "react-hot-toast";
+import { Editor } from "@tinymce/tinymce-react";
+
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 const addHotelForm = () => {
+  const editorRef = useRef(null);
+
+  const [hotelImage, setHotelImage] = useState("");
+  const [description, setDescription] = useState("");
   const [hotelDetails, setHotelDetails] = useState({
     hotelName: "",
-    description: "",
+
     address: "",
     phone: "",
     category: "",
+    formData: new FormData(),
   });
 
-  const [image, setImage] = useState("");
+  // const [image, setImage] = useState("");
+
+  let { hotelName, address, phone, category, formData } = hotelDetails;
 
   const handleChange = (e) => {
-    setHotelDetails({ ...hotelDetails, [e.target.name]: e.target.value });
+    const { name, value, files } = e.target;
+
+    if (e.target.name === "image") {
+      formData.set("image", e.target.files[0]);
+    } else {
+      setHotelDetails({ ...hotelDetails, [e.target.name]: e.target.value });
+      formData.set(e.target.name, e.target.value);
+    }
   };
+
+  let editorDescription = "";
+  if (editorRef.current) {
+    // console.log(editorRef.current.getContent());
+    // console.log('valie')
+
+    editorDescription = (editorRef.current.getContent());
+
+  }
+
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(image, "image");
-    console.log(hotelDetails);
-    addHotelAPI(JSON.stringify(hotelDetails)).then((data) => {
-      console.log(data);
+
+
+    addHotelAPI(formData).then((data) => {
+
       if (data) {
-        toast.success("Hotel Added Successfully");
+        toast.success("Hotel added successfully");
       } else {
         toast.error("Failed to add hotel");
+        console.log("Error while adding hotels")
+        setHotelDetails({
+          hotelName: "",
+          description: "",
+          address: "",
+          phone: "",
+          category: "",
+          formData: new FormData(),
+        });
       }
     });
+
+    console.log(formData, "form dataaaa");
   };
+
+  // const log = () => {
+  //   if (editorRef.current) {
+  //     // console.log(editorRef.current.getContent());
+  //     // console.log('valie')
+
+  //     setDescription(editorRef.current.getContent());
+  //     console.log(description, 'd')
+  //   }
+  // };
+
+  console.log(hotelDetails, "hotelDetails");
 
   return (
     <div>
+      <div>{description}</div>
       <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -50,9 +104,11 @@ const addHotelForm = () => {
           >
             <input
               type="file"
-              name="hotelImage"
+              name="image"
               id="file"
-              onChange={(e) => setImage(e.target.value)}
+              // onChange={(e) => setHotelImage(e.target.files[0])}
+              // onChange={uploadFileHandler}
+              onChange={handleChange}
             />
             <div>
               <label
@@ -149,14 +205,58 @@ const addHotelForm = () => {
                 </label>
               </div>
               <div className="mt-2">
-                <textarea
+                {/* <textarea
                   onChange={handleChange}
                   id="description"
                   name="description"
                   type="text"
                   required
                   className="block w-full rounded-md border-0 py-2 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                /> */}
+
+                <Editor
+                name="editorName"
+                  apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+                  onInit={(_evt, editor) => (editorRef.current = editor)}
+                  initialValue="<p>This is the initial content of the editor.</p>"
+                  init={{
+                    height: 300,
+                    menubar: false,
+                    plugins: [
+                      "advlist",
+                      "autolink",
+                      "lists",
+                      "link",
+                      "image",
+                      "charmap",
+                      "preview",
+                      "anchor",
+                      "searchreplace",
+                      "visualblocks",
+                      "code",
+                      "fullscreen",
+                      "insertdatetime",
+                      "media",
+                      "table",
+                      "code",
+                      "help",
+                      "wordcount",
+                    ],
+                    toolbar:
+                      "undo redo | blocks | " +
+                      "bold italic forecolor | alignleft aligncenter " +
+                      "alignright alignjustify | bullist numlist outdent indent | " +
+                      "removeformat | help",
+                    content_style:
+                      "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+                  }}
                 />
+                {/* <button
+                  onClick={log}
+                  className="bg-orange-600 px-4 py-2 rounded-xl text-white my-6 "
+                >
+                  Log editor content
+                </button> */}
               </div>
             </div>
             <div>
@@ -170,12 +270,12 @@ const addHotelForm = () => {
           </form>
 
           <p className="mt-10 text-center text-sm text-gray-500">
-            Not a member?{" "}
+            Not a member?
             <a
               href="#"
               className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
             >
-              Start a 14 day free trial
+              Register
             </a>
           </p>
         </div>

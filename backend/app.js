@@ -9,6 +9,7 @@ const cookieParser = require("cookie-parser");
 
 const cors = require("cors");
 const app = express();
+const uploadRoutes = require("./routes/uploadRoutes");
 
 connectDB();
 
@@ -16,8 +17,9 @@ connectDB();
 const testRoutes = require("./routes/testRoutes");
 const userRoutes = require("./routes/userRoutes");
 const hotelRoutes = require("./routes/hotelRoutes");
-const uploadRoutes = require("./routes/uploadRoutes");
+
 const { errorHandler, notFound } = require("./middleware/ErrorHandler");
+const upload = require("./routes/uploadRoutes");
 
 // middleware
 
@@ -32,20 +34,18 @@ app.use(cors());
 app.use("/api/v1/test", testRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/hotels", hotelRoutes);
+// app.use("/api/v1/upload", uploadRoutes);
 
-app.post("/upload", uploadRoutes);
-
-app.post("/demoRoute", async (req, res) => {
-  //   res.send("Hello from demoRoute");
+app.post("/api/v1/demoUpload", upload.array("image", 12), async (req, res) => {
   console.log(req.body);
-
-  res.status(201).json({
-    success: "True",
-  });
+  console.log(req.files);
+  res.send("ok");
 });
 
-__dirname = path.resolve();
-app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+__dirname = path.resolve(); // this
+
+// app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+app.use("/uploads", express.static("../uploads"));
 
 app.use(notFound);
 app.use(errorHandler);
