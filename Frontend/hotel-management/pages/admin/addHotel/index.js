@@ -12,77 +12,142 @@ const addHotelForm = () => {
 
   const [hotelImage, setHotelImage] = useState("");
   const [description, setDescription] = useState("");
-  const [hotelDetails, setHotelDetails] = useState({
-    hotelName: "",
+  // const [editorDescription, setEditorDescription] = useState("");
+  let editorDescription = "";
 
-    address: "",
-    phone: "",
-    category: "",
-    formData: new FormData(),
-  });
+  const [hotelName, setHotelName] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [category, setCategory] = useState("");
+  const [formData, setFormData] = useState(new FormData());
 
-  // const [image, setImage] = useState("");
+  // if (editorRef.current) {
+  //   // console.log(editorRef.current.getContent());
+  //   // console.log('valie')
 
-  let { hotelName, address, phone, category, formData } = hotelDetails;
+  //   setEditorDescription(editorRef.current.getContent());
+  // }
+  // const handleChange = (e) => {
 
-  const handleChange = (e) => {
+  //   setHotelName(e.target.value);
+  //   setAddress(e.target.value);
+  //   setPhone(e.target.value);
+  //   setCategory(e.target.value);
+
+  //   // const { name, value, files } = e.target;
+
+  //   // if (e.target.name === "image") {
+  //   //   formData.set("image", e.target.files[0]);
+  //   // } else {
+  //   //   setHotelDetails({ ...hotelDetails, [e.target.name]: e.target.value });
+  //   //   formData.set(e.target.name, e.target.value);
+  //   // }
+  // };
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+
+  //   console.log(hotelName, "hotel name");
+  //   const hotelDetails = {
+  //     hotelName: hotelName,
+  //     address: address,
+  //     phone: phone,
+  //     category: category,
+  //     formData: formData,
+  //     description: editorDescription,
+  //     image: hotelImage,
+  //   };
+
+  //   console.log(hotelDetails, "editor description");
+
+  //   addHotelAPI(hotelDetails).then((data) => {
+  //     console.log(hotelDetails, 'api hotel details')
+  //     if (data) {
+  //       toast.success("Hotel added successfully");
+  //     } else {
+  //       toast.error("Failed to add hotel");
+  //       console.log("Error while adding hotels");
+  //       // setHotelDetails({
+  //       //   hotelName: "",
+  //       //   description: "",
+  //       //   address: "",
+  //       //   phone: "",
+  //       //   category: "",
+  //       //   formData: new FormData(),
+  //       // });
+  //     }
+  //   });
+
+  //   console.log(formData, "form dataaaa");
+  // };
+
+  // console.log(hotelDetails, "hotelDetails");
+
+  const handleInputChange = (e) => {
     const { name, value, files } = e.target;
 
-    if (e.target.name === "image") {
-      formData.set("image", e.target.files[0]);
+    if (name === "image") {
+      setHotelImage(files[0]);
     } else {
-      setHotelDetails({ ...hotelDetails, [e.target.name]: e.target.value });
-      formData.set(e.target.name, e.target.value);
+      switch (name) {
+        case "hotelName":
+          setHotelName(value);
+          break;
+        case "address":
+          setAddress(value);
+          break;
+        case "phone":
+          setPhone(value);
+          break;
+        case "category":
+          setCategory(value);
+          break;
+        default:
+          break;
+      }
     }
   };
 
-  let editorDescription = "";
-  if (editorRef.current) {
-    // console.log(editorRef.current.getContent());
-    // console.log('valie')
+  console.log(editorDescription, "description");
 
-    editorDescription = (editorRef.current.getContent());
-
-  }
-
-
+ 
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (editorRef.current) {
+      // console.log(editorRef.current.getContent());
+      // console.log('valie')
+  
+      editorDescription = editorRef.current.getContent();
+    }
+
+    // console.log(editorDescription, 'description')
+
+    const formData = new FormData();
+    formData.append("hotelName", hotelName);
+    formData.append("address", address);
+    formData.append("phone", phone);
+    formData.append("category", category);
+    formData.append("description", editorDescription);
+
+
+
+    if (hotelImage) {
+      formData.append("image", hotelImage);
+    }
+
+    console.log(formData, "form dataaaa");
 
     addHotelAPI(formData).then((data) => {
-
       if (data) {
         toast.success("Hotel added successfully");
       } else {
         toast.error("Failed to add hotel");
-        console.log("Error while adding hotels")
-        setHotelDetails({
-          hotelName: "",
-          description: "",
-          address: "",
-          phone: "",
-          category: "",
-          formData: new FormData(),
-        });
+        console.log("Error while adding hotels");
       }
     });
-
-    console.log(formData, "form dataaaa");
   };
-
-  // const log = () => {
-  //   if (editorRef.current) {
-  //     // console.log(editorRef.current.getContent());
-  //     // console.log('valie')
-
-  //     setDescription(editorRef.current.getContent());
-  //     console.log(description, 'd')
-  //   }
-  // };
-
-  console.log(hotelDetails, "hotelDetails");
 
   return (
     <div>
@@ -108,7 +173,8 @@ const addHotelForm = () => {
               id="file"
               // onChange={(e) => setHotelImage(e.target.files[0])}
               // onChange={uploadFileHandler}
-              onChange={handleChange}
+              // onChange={(e) => setHotelImage(e.target.files[0]) }
+              onChange={handleInputChange}
             />
             <div>
               <label
@@ -119,7 +185,8 @@ const addHotelForm = () => {
               </label>
               <div className="mt-2">
                 <input
-                  onChange={handleChange}
+                  // onChange={(e) => setHotelName(e.target.value)}
+                  onChange={handleInputChange}
                   id="hotelName"
                   name="hotelName"
                   type="text"
@@ -140,7 +207,8 @@ const addHotelForm = () => {
               </div>
               <div className="mt-2">
                 <input
-                  onChange={handleChange}
+                  // onChange={handleChange}
+                  onChange={handleInputChange}
                   id="address"
                   name="address"
                   type="text"
@@ -160,7 +228,8 @@ const addHotelForm = () => {
               </div>
               <div className="mt-2">
                 <input
-                  onChange={handleChange}
+                  // onChange={(e) => setPhone(e.target.value)}
+                  onChange={handleInputChange}
                   id="phone"
                   name="phone"
                   type="text"
@@ -182,7 +251,8 @@ const addHotelForm = () => {
               <div className="mt-2">
                 <select
                   name="category"
-                  onChange={handleChange}
+                  // onChange={(e) => setCategory(e.target.value)}
+                  onChange={handleInputChange}
                   className="block w-full rounded-md border-0 py-2.5 px-2  text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 >
                   <option value="">Please Select</option>
@@ -215,7 +285,7 @@ const addHotelForm = () => {
                 /> */}
 
                 <Editor
-                name="editorName"
+                  name="editorDescription"
                   apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
                   onInit={(_evt, editor) => (editorRef.current = editor)}
                   initialValue="<p>This is the initial content of the editor.</p>"

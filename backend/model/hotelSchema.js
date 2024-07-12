@@ -26,7 +26,7 @@ const hotelSchema = new mongoose.Schema(
 
     hotelName: {
       type: String,
-      required: true,
+      // required: true,
     },
     description: {
       type: String,
@@ -34,16 +34,16 @@ const hotelSchema = new mongoose.Schema(
     },
     address: {
       type: String,
-      required: true,
+      // required: true,
     },
     phone: {
       type: String,
-      required: true,
+      // required: true,
     },
 
     category: {
       type: String,
-      required: true,
+      // required: true,
       enum: ["1 star", "2 star", "3 star", "4 star", "5 star"],
     },
   },

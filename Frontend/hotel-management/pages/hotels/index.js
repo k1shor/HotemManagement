@@ -57,25 +57,26 @@ const categoryFilter = [
     id: "address",
     name: "Address",
     options: [
-      { value: "new-arrivals", label: "New Arrivals", checked: false },
-      { value: "sale", label: "Sale", checked: false },
-      { value: "travel", label: "Travel", checked: true },
-      { value: "organization", label: "Organization", checked: false },
-      { value: "accessories", label: "Accessories", checked: false },
+      { value: "kathmandu", label: "Kathmandu", checked: false },
+      { value: "pokhara", label: "Pokhara", checked: false },
+      { value: "chitwan", label: "Chitwan", checked: false },
+      { value: "lumbini", label: "Lumbini", checked: false },
+      { value: "dharan", label: "Dharan", checked: false },
+  
     ],
   },
-  {
-    id: "size",
-    name: "Size",
-    options: [
-      { value: "2l", label: "2L", checked: false },
-      { value: "6l", label: "6L", checked: false },
-      { value: "12l", label: "12L", checked: false },
-      { value: "18l", label: "18L", checked: false },
-      { value: "20l", label: "20L", checked: false },
-      { value: "40l", label: "40L", checked: true },
-    ],
-  },
+  // {
+  //   id: "size",
+  //   name: "Size",
+  //   options: [
+  //     { value: "2l", label: "2L", checked: false },
+  //     { value: "6l", label: "6L", checked: false },
+  //     { value: "12l", label: "12L", checked: false },
+  //     { value: "18l", label: "18L", checked: false },
+  //     { value: "20l", label: "20L", checked: false },
+  //     { value: "40l", label: "40L", checked: true },
+  //   ],
+  // },
 ];
 
 function classNames(...classes) {
@@ -85,9 +86,12 @@ function classNames(...classes) {
 const Hotels = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const [hotels, setHotels] = useState([]);
+  const [hotels, setHotels] = useState();
+
+  const [filteredHotels, setFilteredHotels] = useState(null);
 
   const [selectedCategory, setSelectedCategory] = useState("");
+  // const [isChecked, setIsChecked] = useState(false);
 
   useEffect(() => {
     async function getAllHotel() {
@@ -97,31 +101,61 @@ const Hotels = () => {
     }
 
     getAllHotel();
-  }, [hotels]);
+  }, []);
 
-  const filterByCategoryHandler = (category) => {
-    console.log(category);
-    setSelectedCategory(category);
+  // const filterByCategoryHandler = (category) => {
+  //   const lowerCaseCategory = category.toLowerCase();
+  //   setSelectedCategory(lowerCaseCategory);
+  //   console.log(selectedCategory, "selected category");
 
-    const filteredHotels = hotels.filter((hotel) => {
-      // console.log(hotel, 'hotel')
-      console.log(hotel.category, 'hotel category')
-      if(hotel.category === selectedCategory){
+  //   const filteredResult = hotels.filter((hotel) => {
+  //     return hotel.category.toLowerCase() === selectedCategory;
+  //   });
 
-        return hotel
+  //   console.log(filteredResult, "filtered result");
 
-      }else{
-        return null
-      }
-    }
-    );
+  //   setHotels(filteredResult);
 
-    console.log(category, 'cateogyr')
-    console.log(hotels, 'hotels')
+  //   console.log(hotels, "first filtered hotels");
 
-    console.log(filteredHotels, 'filtered hotels')
+  //   // // set hotels to filtered hotels
+  //   // setHotels(filteredHotels);
+  //   // console.log(hotels, 'hotels')
+
+  //   // // console.log(filteredHotels, "filtered hotels")
+  //   // console.log(hotels, 'hotels')
+  // };
+
+  const filterByCategoryHandler = (category, option) => {
+    console.log(option, "isChecked");
+
+    const lowerCaseCategory = category.toLowerCase();
+    setSelectedCategory(lowerCaseCategory);
+
+    const originalHotels = [...hotels];
+    // Filter hotels by the category directly using the lowerCaseCategory variable
+    const filteredResult = hotels.filter((hotel) => {
+      return hotel.category.toLowerCase() === lowerCaseCategory;
+    });
 
 
+
+    // if (!isChecked) {
+    //   setHotels(filteredResult);
+    //   setIsChecked(!isChecked);
+    // } else {
+    //   if (filteredResult.length === 0) {
+    //     setHotels(originalHotels);
+    //     setIsChecked(!isChecked);
+    //   }
+    // }
+    // else {
+    //   setHotels(filteredResult);
+    // }
+
+    // console.log(filteredResult, "filtered result");
+
+    console.log(hotels, "first filtered hotels");
   };
 
   return (
@@ -336,9 +370,17 @@ const Hotels = () => {
                               className="flex items-center"
                             >
                               <input
-                                onChange={(e) =>
-                                  filterByCategoryHandler(e.target.value)
-                                }
+                                onChange={(e) => {
+                                  filterByCategoryHandler(
+                                    e.target.value,
+                                    option
+                                  );
+                                  // setIsChecked((prev) => {
+                                  //   return (prev = !prev.checked);
+                                  // });
+
+                                  console.log(option, "option");
+                                }}
                                 defaultValue={option.value}
                                 defaultChecked={option.checked}
                                 id={`filter-${section.id}-${optionIdx}`}
@@ -368,7 +410,7 @@ const Hotels = () => {
                   <div className="bg-white">
                     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
                       <div className=" grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-8">
-                        {hotels.map((hotel) => {
+                        {hotels?.map((hotel) => {
                           const hotelId = hotel._id;
 
                           const filePath = hotel.image;
@@ -376,11 +418,11 @@ const Hotels = () => {
                           const fileName = filePath?.split("/").pop();
 
                           return (
-                            <div key={hotel._id} className="group relative ">
+                            <div key={hotel?._id} className="group relative ">
                               <a href={`/hotels/${hotelId}`}>
                                 <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
                                   <img
-                                    alt={hotel.imageAlt}
+                                    alt={hotel?.imageAlt}
                                     src={`/images/uploads/${fileName}`}
                                     className="h-full w-full object-cover object-center lg:h-full lg:w-full"
                                   />

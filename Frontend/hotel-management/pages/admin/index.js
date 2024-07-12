@@ -13,7 +13,7 @@ const Admin = () => {
       setHotels(data.hotels);
     });
   }, [hotels]);
-  console.log(hotels, "hotels admin");
+
   const router = useRouter();
 
   const [userDetails, setUserDetails] = useState(null);
